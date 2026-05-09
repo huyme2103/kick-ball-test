@@ -115,10 +115,8 @@ public sealed class BallController : MonoBehaviour
                 transform.position,
                 Quaternion.identity
             );
-
-            SoccerCameraManager.Instance.ReturnToPlayerAfterDelay(2f);
             Destroy(spawnedParticle.gameObject, 2f);
-
         }
+        SoccerCameraManager.Instance.ReturnToPlayerAfterDelay(2f);
     }
 }

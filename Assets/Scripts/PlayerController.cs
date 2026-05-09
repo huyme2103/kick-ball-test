@@ -8,7 +8,10 @@ public sealed class PlayerController : MonoBehaviour
         Animator.StringToHash("Blend");
 
     private const float MovementThreshold = 0.01f;
-
+[SerializeField] private float pushForce = 4f;
+[SerializeField] private float maxBallSpeed = 6f;
+    private float _pushCooldown = 0f;
+    private const float PushInterval = 0.2f; 
     [Header("References")]
     [SerializeField] private CharacterController characterController;
     [SerializeField] private Animator animator;
@@ -26,8 +29,6 @@ public sealed class PlayerController : MonoBehaviour
     private Vector3 movementInput;
     private float verticalVelocity;
 
-[SerializeField]
-private float pushForce = 4f;
     private void Reset()
     {
         characterController = GetComponent<CharacterController>();
@@ -132,37 +133,50 @@ private float pushForce = 4f;
         );
     }
 
-private void OnControllerColliderHit(
-    ControllerColliderHit hit)
-{
-    Rigidbody rigidbody =
-        hit.collider.attachedRigidbody;
-
-    if (rigidbody == null)
+    private void OnControllerColliderHit(ControllerColliderHit hit)
     {
-        return;
-    }
+        if (_pushCooldown > 0f)
+        {
+            _pushCooldown -= Time.deltaTime;
+            return;
+        }
 
-    BallController ball =
-        rigidbody.GetComponent<BallController>();
+        Rigidbody rigidbody = hit.collider.attachedRigidbody;
+        if (rigidbody == null) return;
 
-    if (ball == null || ball.IsFlying)
-    {
-        return;
-    }
+        BallController ball = rigidbody.GetComponent<BallController>();
+        if (ball == null || ball.IsFlying) return;
 
-    Vector3 pushDirection =
-        new Vector3(
+        Vector3 pushDirection = new Vector3(
             hit.moveDirection.x,
             0f,
             hit.moveDirection.z
         );
 
-    rigidbody.AddForce(
-        pushDirection * pushForce,
-        ForceMode.Impulse
-    );
-}
+        rigidbody.AddForce(
+            pushDirection * pushForce,
+            ForceMode.VelocityChange
+        );
+
+        
+        Vector3 flatVelocity = new Vector3(
+            rigidbody.velocity.x,
+            0f,
+            rigidbody.velocity.z
+        );
+
+        if (flatVelocity.magnitude > maxBallSpeed)
+        {
+            flatVelocity = flatVelocity.normalized * maxBallSpeed;
+            rigidbody.velocity = new Vector3(
+                flatVelocity.x,
+                rigidbody.velocity.y,
+                flatVelocity.z
+            );
+        }
+
+        _pushCooldown = PushInterval; 
+    }
 #if UNITY_EDITOR
     private void OnValidate()
     {

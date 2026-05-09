@@ -5,7 +5,7 @@ public sealed class BallDetector : MonoBehaviour
     
     [SerializeField]
     private float detectRadius = 2.5f;
-
+   
     [SerializeField]
     private LayerMask ballLayer;
 
